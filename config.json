@@ -1,0 +1,28 @@
+{
+  "odoo": {
+    "url": "https://cdu.bonolohealth.co.ls",
+    "db": "bahmni",
+    "username": "print-agent@your-clinic.example.com",
+    "api_key": "REPLACE_WITH_API_KEY"
+  },
+  "poll_interval_seconds": 3,
+  "election": {
+    "udp_port": 47990,
+    "broadcast_interval_seconds": 2,
+    "missed_beats_before_failover": 3,
+    "priority": 10
+  },
+  "printers": {
+    "box_printer": {
+      "type": "raw_socket",
+      "host": "192.168.26.43",
+      "port": 9100,
+      "comment": "TSC thermal label printer -- native TSPL"
+    },
+    "Manifest_printer": {
+      "type": "cups",
+      "queue_name": "HP_LaserJet_FrontDesk",
+      "comment": "Standard document printer"
+    }
+  }
+}

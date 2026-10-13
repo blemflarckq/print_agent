@@ -1,0 +1,6 @@
+pystray>=0.19
+pywebview>=4.4
+Pillow>=10.0
+pywin32>=306 ; platform_system == "Windows"
+pycups>=2.0.1 ; platform_system != "Windows"
+pyinstaller>=6.0

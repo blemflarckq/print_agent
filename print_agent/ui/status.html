@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bahmni Print Agent</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --border: #dfe3ea;
+    --ink: #101828;
+    --muted: #667085;
+    --faint: #98a2b3;
+    --navy: #0b1220;
+    --navy-2: #1c2536;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
+    --green-bg: #ecfdf3; --green-text: #027a48; --green-border: #abefc6; --green-dot: #12b76a;
+    --amber-bg: #fffaeb; --amber-text: #b54708; --amber-border: #fedf89; --amber-dot: #f79009;
+    --red-bg:   #fef3f2; --red-text:   #b42318; --red-border: #fecdca; --red-dot: #f04438;
+    --gray-bg:  #f2f4f7; --gray-text:  #475467; --gray-border: #e4e7ec; --gray-dot: #98a2b3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+
+  header.topbar {
+    background: var(--navy); color: #fff;
+    padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+  .brand-dot {
+    position: absolute; bottom: -2px; right: -3px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gray-dot); border: 1.5px solid var(--navy); flex-shrink: 0;
+  }
+  .brand-title { font-size: 14px; font-weight: 700; letter-spacing: 0.01em; }
+  .brand-sub { font-size: 11px; color: #9aa4b2; font-family: var(--mono); margin-top: 1px; }
+  .role-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 4px; border: 1px solid #3a4358; color: #c8cedb;
+  }
+  .role-badge.active { background: var(--green-dot); border-color: var(--green-dot); color: #04321d; }
+
+  .alert-strip {
+    padding: 10px 18px; font-size: 12.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border);
+  }
+  .alert-strip.ok     { background: var(--green-bg); color: var(--green-text); }
+  .alert-strip.warn   { background: var(--amber-bg); color: var(--amber-text); }
+  .alert-strip.critical { background: var(--red-bg); color: var(--red-text); }
+  .alert-strip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .alert-strip.ok .dot { background: var(--green-dot); }
+  .alert-strip.warn .dot { background: var(--amber-dot); }
+  .alert-strip.critical .dot { background: var(--red-dot); }
+
+  main { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .card-header {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-body { padding: 6px 14px 10px; }
+
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid #f0f1f4;
+  }
+  .row:last-child { border-bottom: none; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot.ok { background: var(--green-dot); }
+  .dot.bad { background: var(--red-dot); }
+  .dot.unknown { background: var(--gray-dot); }
+
+  .row-main { flex: 1; min-width: 0; }
+  .row-title { font-weight: 600; font-size: 13px; }
+  .row-meta { font-size: 11px; color: var(--faint); font-family: var(--mono); margin-top: 1px; }
+  .row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  button {
+    font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+    cursor: pointer;
+  }
+  button:hover { background: #f7f8fa; border-color: #c9ced8; }
+  button.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+  button.primary:hover { background: var(--navy-2); }
+
+  .error-box {
+    margin: 0 0 8px; padding: 8px 10px; background: var(--red-bg); border: 1px solid var(--red-border);
+    border-radius: 4px; font-family: var(--mono); font-size: 11.5px; color: var(--red-text);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    text-align: left; padding: 6px 4px; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 7px 4px; border-bottom: 1px solid #f0f1f4; }
+  tr:last-child td { border-bottom: none; }
+  .time-cell { font-family: var(--mono); color: var(--faint); white-space: nowrap; }
+
+  .pill {
+    display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px;
+    border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .pill.done { background: var(--green-bg); color: var(--green-text); }
+  .pill.failed { background: var(--red-bg); color: var(--red-text); }
+
+  .empty { color: var(--faint); font-size: 12px; padding: 10px 0; font-style: italic; }
+
+  footer.footbar {
+    padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border); background: var(--surface);
+  }
+  .updated { font-size: 11px; color: var(--faint); font-family: var(--mono); }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 200 140" width="22" height="15" aria-hidden="true">
+          <path d="M107.7,96.4 A46,46 0 1,1 107.7,43.6" fill="none" stroke="#c8cedb" stroke-width="18" stroke-linecap="round"/>
+          <polygon points="120.3,61.6 99.5,49.3 115.9,37.9" fill="#c8cedb"/>
+          <path d="M92.3,96.4 A46,46 0 1,0 92.3,43.6" fill="none" stroke="#c8cedb" stroke-width="18" stroke-linecap="round"/>
+          <polygon points="79.7,61.6 100.5,49.3 84.1,37.9" fill="#c8cedb"/>
+        </svg>
+        <span class="brand-dot" id="brandDot"></span>
+      </span>
+      <div>
+        <div class="brand-title">Bahmni Print Agent</div>
+        <div class="brand-sub" id="hostLabel">this machine</div>
+      </div>
+    </div>
+    <div class="role-badge" id="roleBadge">--</div>
+  </header>
+
+  <div class="alert-strip ok" id="alertStrip">
+    <span class="dot"></span>
+    <span id="alertText">Checking status...</span>
+  </div>
+
+  <main>
+    <section class="card">
+      <div class="card-header"><span class="eyebrow">Odoo server</span></div>
+      <div class="card-body">
+        <div class="row" id="serverRow">
+          <span class="dot unknown"></span>
+          <div class="row-main">
+            <div class="row-title">Checking...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header"><span class="eyebrow">Printers</span></div>
+      <div class="card-body" id="printers"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header"><span class="eyebrow">Other agents on this network</span></div>
+      <div class="card-body" id="peers"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <span class="eyebrow">Recent jobs</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Time</th><th>Label</th><th>Printer</th><th>Result</th><th></th></tr></thead>
+          <tbody id="jobsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footbar">
+    <span class="updated" id="lastUpdated">--</span>
+    <button id="forceActiveBtn" onclick="forceActive()">Force active</button>
+  </footer>
+
+<script>
+function fmtTime(ts) {
+  if (!ts) return "--";
+  return new Date(ts * 1000).toLocaleTimeString();
+}
+function ago(ts) {
+  if (!ts) return "never";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  if (s < 5) return "just now";
+  if (s < 60) return s + "s ago";
+  return Math.round(s / 60) + "m ago";
+}
+
+function computeSeverity(snap) {
+  if (snap.server_ok === false) return "critical";
+  const printers = Object.values(snap.printer_status || {});
+  if (printers.some(p => !p.ok)) return "warn";
+  if (snap.server_ok === null) return "unknown";
+  return "ok";
+}
+
+async function refresh() {
+  const snap = await window.pywebview.api.get_snapshot();
+
+  const role = snap.role || "STANDBY";
+  const roleBadge = document.getElementById("roleBadge");
+  roleBadge.textContent = role;
+  roleBadge.className = "role-badge" + (role === "ACTIVE" ? " active" : "");
+
+  const severity = computeSeverity(snap);
+  const strip = document.getElementById("alertStrip");
+  const text = document.getElementById("alertText");
+  strip.className = "alert-strip " + (severity === "unknown" ? "ok" : severity);
+  const messages = {
+    ok: "All systems operational" + (role === "ACTIVE" ? " -- this instance is handling print jobs" : " -- this instance is on standby"),
+    warn: "Attention needed -- one or more printers are unreachable",
+    critical: "Action required -- cannot reach the Odoo server. Printing is paused until connectivity is restored.",
+    unknown: "Checking status...",
+  };
+  text.textContent = messages[severity];
+
+  document.getElementById("brandDot").style.background =
+    {ok: "var(--green-dot)", warn: "var(--amber-dot)", critical: "var(--red-dot)", unknown: "var(--gray-dot)"}[severity];
+
+  const sOk = snap.server_ok;
+  document.getElementById("serverRow").innerHTML = `
+    <span class="dot ${sOk === null ? 'unknown' : sOk ? 'ok' : 'bad'}"></span>
+    <div class="row-main">
+      <div class="row-title">${sOk === null ? 'Checking...' : sOk ? 'Connected' : 'Unreachable'}</div>
+      <div class="row-meta">last checked ${ago(snap.server_last_checked)}</div>
+    </div>`;
+
+  const printersEl = document.getElementById("printers");
+  const entries = Object.entries(snap.printer_status || {});
+  printersEl.innerHTML = entries.length === 0 ? '<div class="empty">No printers configured.</div>' :
+    entries.map(([key, p]) => `
+      <div class="row">
+        <span class="dot ${p.ok ? 'ok' : 'bad'}"></span>
+        <div class="row-main">
+          <div class="row-title">${key}</div>
+          <div class="row-meta">last checked ${ago(p.last_checked)}</div>
+          ${p.ok ? '' : `<div class="error-box">${p.error || 'Unreachable'}</div>`}
+        </div>
+        <div class="row-actions">
+          <button onclick="testConnection('${key}')">Test</button>
+          <button onclick="testPrint('${key}')">Test print</button>
+        </div>
+      </div>`).join("");
+
+  const peersEl = document.getElementById("peers");
+  const peers = Object.entries(snap.peers || {});
+  peersEl.innerHTML = peers.length === 0
+    ? '<div class="empty">No other agents currently visible on this network.</div>'
+    : peers.map(([host, p]) => `
+      <div class="row">
+        <span class="dot ok"></span>
+        <div class="row-main">
+          <div class="row-title">${host}</div>
+          <div class="row-meta">${p.role}</div>
+        </div>
+      </div>`).join("");
+
+  const jobsBody = document.getElementById("jobsBody");
+  const jobs = snap.recent_jobs || [];
+  jobsBody.innerHTML = jobs.length === 0
+    ? '<tr><td colspan="5" class="empty">No jobs processed yet.</td></tr>'
+    : jobs.map(j => `
+      <tr>
+        <td class="time-cell">${fmtTime(j.time)}</td>
+        <td>${j.label_type}</td>
+        <td>${j.printer_key}</td>
+        <td>
+          <span class="pill ${j.result}">${j.result}</span>
+          ${j.error ? `<div class="row-meta" style="margin-top:3px;max-width:220px;">${j.error}</div>` : ''}
+        </td>
+        <td>${j.result === 'failed' ? `<button onclick="retry('${j.label_type}')">Retry</button>` : ''}</td>
+      </tr>`).join("");
+
+  document.getElementById("lastUpdated").textContent = "Updated " + ago(Date.now() / 1000);
+}
+
+function forceActive() { window.pywebview.api.force_active(); setTimeout(refresh, 500); }
+function testConnection(key) { window.pywebview.api.test_connection(key).then(refresh); }
+function testPrint(key) { window.pywebview.api.test_print(key).then(refresh); }
+function retry(labelType) { window.pywebview.api.retry_failed(labelType).then(refresh); }
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
